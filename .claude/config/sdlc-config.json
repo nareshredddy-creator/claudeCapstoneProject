@@ -1,0 +1,141 @@
+{
+  "_comment": "SDLC pipeline configuration. No secrets here — tokens belong in .env (git-ignored).",
+
+  "artifactRoot": ".claude/AgentOutput",
+
+  "artifacts": {
+    "requirements":          "requirements.md",
+    "architecture":          "architecture.md",
+    "designReview":          "design-review.md",
+    "implPlan":              "impl-plan.md",
+    "implementationNotes":   "implementation-notes.md",
+    "codeReview":            "code-review.md",
+    "verificationReport":    "verification-report.md",
+    "prSummary":             "pr-summary.md",
+    "session":               "workflow-session.json"
+  },
+
+  "stages": [
+    {
+      "number": 1,
+      "name":   "Requirements Analysis",
+      "agent":  "requirement-analyst",
+      "skill":  "requirements-analysis",
+      "artifact": "requirements"
+    },
+    {
+      "number": 2,
+      "name":   "Architecture Design",
+      "agent":  "architecture-agent",
+      "skill":  "architecture-design",
+      "artifact": "architecture"
+    },
+    {
+      "number": 3,
+      "name":   "Design Review",
+      "agent":  "design-review-agent",
+      "skill":  "design-review",
+      "artifact": "designReview"
+    },
+    {
+      "number": 4,
+      "name":   "Implementation Planning",
+      "agent":  "implementation-planner",
+      "skill":  "implementation-planning",
+      "artifact": "implPlan"
+    },
+    {
+      "number": 5,
+      "name":   "Implementation",
+      "agent":  "implementation-agent",
+      "skill":  "implementation",
+      "artifact": "implementationNotes"
+    },
+    {
+      "number": 6,
+      "name":   "Code Review",
+      "agent":  "code-review-agent",
+      "skill":  "code-review",
+      "artifact": "codeReview"
+    },
+    {
+      "number": 7,
+      "name":   "Verification",
+      "agent":  "verification-agent",
+      "skill":  "verification",
+      "artifact": "verificationReport"
+    },
+    {
+      "number": 8,
+      "name":   "PR Preparation",
+      "agent":  "pr-agent",
+      "skill":  "pull-request",
+      "artifact": "prSummary"
+    }
+  ],
+
+  "statusVocabulary":    ["pending", "in-progress", "needs-review", "approved", "rejected", "skipped"],
+  "runStatusVocabulary": ["in-progress", "complete", "abandoned"],
+
+  "approvalPhrases": [
+    "APPROVE",
+    "APPROVED",
+    "Proceed to the next stage"
+  ],
+
+  "targetBranch": "main",
+
+  "github": {
+    "repo":    "nareshredddy-creator/claudeCapstoneProject",
+    "repoUrl": "https://github.com/nareshredddy-creator/claudeCapstoneProject"
+  },
+
+  "jira": {
+    "url":      "${JIRA_URL}",
+    "username": "${JIRA_USERNAME}",
+    "_note":    "Token comes from JIRA_API_TOKEN in .env — never stored here"
+  },
+
+  "branchNaming": {
+    "firstRun":    "feature/{KEY}",
+    "repeatRun":   "feature/{KEY}-{N}",
+    "_note":       "N = lowest integer where neither local nor remote branch exists"
+  },
+
+  "codeReview": {
+    "areas": [
+      "correctness",
+      "acceptance-criteria-coverage",
+      "edge-cases",
+      "security",
+      "maintainability",
+      "regressions",
+      "test-quality",
+      "secret-handling"
+    ]
+  },
+
+  "verification": {
+    "reportFields": ["passed", "failed", "skipped", "not-run", "error"],
+    "_note": "verification-agent must report all five fields. Never claim pass without execution evidence."
+  },
+
+  "pullRequest": {
+    "aiGenerated": {
+      "titlePrefix":    "[AI-Generated]",
+      "labels":         ["ai-generated"],
+      "bodyDisclosure": "⚠️ **AI-Generated PR** — This pull request was produced by an AI-assisted SDLC pipeline (Claude Code). Every stage was reviewed and explicitly approved by a human. Please review carefully before merging.",
+      "commitTrailer":  "Co-Authored-By: Claude SDLC Pipeline <noreply@anthropic.com>"
+    }
+  },
+
+  "preflight": {
+    "checks": [
+      { "id": "origin-reachable",   "command": "git ls-remote origin",                 "passCondition": "exit 0" },
+      { "id": "gh-auth",            "command": "gh auth status",                        "passCondition": "shows authenticated account" },
+      { "id": "main-local",         "command": "git branch --list main",               "passCondition": "non-empty output" },
+      { "id": "main-remote",        "command": "git ls-remote --heads origin main",    "passCondition": "non-empty output" },
+      { "id": "no-staged-secrets",  "command": "git diff --cached --name-only",        "passCondition": "zero secret-pattern matches in staged files" }
+    ]
+  }
+}

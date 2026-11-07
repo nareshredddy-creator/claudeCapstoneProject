@@ -1,0 +1,8 @@
+node_modules/
+.github/AgentOutput/
+**/mcp.json
+.env
+.env.*
+!.env.example
+!.mcp.json.example
+.claude/AgentOutput/

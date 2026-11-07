@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git branch*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git ls-remote*)",
+      "Bash(git show*)",
+      "Bash(git fetch --dry-run*)",
+      "Bash(gh auth status*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh repo view*)",
+      "Bash(npm test*)",
+      "Bash(npm run test*)",
+      "Bash(npx*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git merge *)",
+      "Bash(git rebase -i*)",
+      "Bash(git reset --hard*)"
+    ]
+  },
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'SDLC POLICY ACTIVE — Stage order: 1-Requirements 2-Architecture 3-Design-Review 4-Impl-Planning 5-Implementation 6-Code-Review 7-Verification 8-PR-Prep. RULES: (1) NEVER commit / push / create-PR / merge without explicit human APPROVE. (2) Approval of one stage does NOT cover any later stage. (3) Checkpoints and completion messages are NOT approval. (4) Silence is NOT approval. (5) Never fabricate test results, Jira data, or approval evidence. (6) Force push and git merge by agents are PROHIBITED. Full rules: .claude/CLAUDE.md'"
+          }
+        ]
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'raw=$(cat); if echo \"$raw\" | grep -qE \"git push.*(--force|-f |-f$)\"; then echo \"[SDLC BLOCK] Force push is prohibited by SDLC policy (.claude/CLAUDE.md).\"; exit 2; fi; if echo \"$raw\" | grep -qE \"\\\"git merge |git merge --\"; then echo \"[SDLC BLOCK] git merge by agents is prohibited. PRs must be merged by humans only.\"; exit 2; fi; if echo \"$raw\" | grep -qE \"git rebase -i\"; then echo \"[SDLC BLOCK] Interactive rebase is prohibited by SDLC policy.\"; exit 2; fi; if echo \"$raw\" | grep -qE \"git reset --hard\"; then echo \"[SDLC BLOCK] git reset --hard is prohibited without explicit human instruction.\"; exit 2; fi; exit 0'"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'raw=$(cat); for protected in \".claude/CLAUDE.md\" \".claude/settings.json\" \".claude/config/sdlc-config.json\"; do if echo \"$raw\" | grep -q \"$protected\"; then echo \"[SDLC WARNING] Editing protected policy file: $protected. Confirm this change is intentional and human-approved.\"; fi; done; exit 0'"
+          }
+        ]
+      }
+    ]
+  }
+}
