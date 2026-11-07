@@ -335,6 +335,33 @@ describe('validateTransaction', () => {
     expect(result.errors.type).toBeDefined();
     expect(result.errors.date).toBeDefined();
   });
+
+  // ── GHCP-2: explicit AC / OQ traceability tests ───────────────────────────
+
+  test('zero amount — error message text matches AC-2', () => {
+    const result = validateTransaction({ amount: '0', type: 'Expense', date: '2026-01-15' });
+    expect(result.errors.amount).toBe(
+      'Enter an amount greater than zero with no more than two decimal places.'
+    );
+  });
+
+  test('scientific notation (1e3) is rejected (OQ-2)', () => {
+    const result = validateTransaction({ amount: '1e3', type: 'Expense', date: '2026-01-15' });
+    expect(result.isValid).toBe(false);
+    expect(result.errors.amount).toBeDefined();
+  });
+
+  test('invalid amount → isValid false and amountInPaise null (AC-3 guard)', () => {
+    const result = validateTransaction({ amount: '0', type: 'Expense', date: '2026-01-15' });
+    expect(result.amountInPaise).toBeNull();
+    expect(result.isValid).toBe(false);
+  });
+
+  test('valid amount → isValid true, amountInPaise > 0 (AC-4 regression)', () => {
+    const result = validateTransaction({ amount: '50.00', type: 'Money Received', date: '2026-01-15' });
+    expect(result.isValid).toBe(true);
+    expect(result.amountInPaise).toBe(5000);
+  });
 });
 
 // ─── isStoredTransaction ─────────────────────────────────────────────────────
